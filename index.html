@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="description" content="Projeção do resultado final do 2º turno de 2026 enquanto o TSE apura, calculada a partir da apuração parcial por município e do gabarito do 1º turno.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Projeção do 2º turno de 2026 ao vivo">
+<meta property="og:description" content="A parcial do TSE engana no começo da noite. Esta página projeta o resultado final município a município, com base no 1º turno. Por @vfaleiros.">
+<meta property="og:url" content="https://victorfaleiros.github.io/projecao-2-turno/">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary">
+<title>Projeção do 2º turno 2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0b0d12; --panel:#13161d; --panel-2:#1b1f29; --line:#272c38; --fg:#e9ebf1; --muted:#9aa2b3; --faint:#6a7384;
+  --flavio:#5ea6f7; --lula:#f28060; --flavio-soft:rgba(94,166,247,.16); --lula-soft:rgba(242,128,96,.16);
+  --ok:#3ccf8e; --warn:#f2c14e; --track:#2a3040;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    color-scheme:light;
+    --bg:#f4f5f8; --panel:#ffffff; --panel-2:#eef0f5; --line:#d8dce6; --fg:#131722; --muted:#5a6375; --faint:#8b93a5;
+    --flavio:#1d6fd4; --lula:#d9542c; --flavio-soft:rgba(29,111,212,.12); --lula-soft:rgba(217,84,44,.12);
+    --ok:#1a9c63; --warn:#b8860b; --track:#dfe3ec;
+  }
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f4f5f8; --panel:#ffffff; --panel-2:#eef0f5; --line:#d8dce6; --fg:#131722; --muted:#5a6375; --faint:#8b93a5;
+  --flavio:#1d6fd4; --lula:#d9542c; --flavio-soft:rgba(29,111,212,.12); --lula-soft:rgba(217,84,44,.12);
+  --ok:#1a9c63; --warn:#b8860b; --track:#dfe3ec;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:48px}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:22px;font-weight:600;margin:22px 0 4px;text-wrap:balance}
+h2{font-size:16px;font-weight:600;margin:30px 0 8px}
+p{margin:0 0 10px;max-width:72ch}
+.sub{color:var(--muted);margin:0 0 6px}
+.byline{margin:0 0 16px;font-size:14px;font-weight:500}
+.byline a{color:var(--flavio);text-decoration:none;font-weight:700;border-bottom:1.5px solid var(--flavio)}
+.num{font-variant-numeric:tabular-nums}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:12px}
+.eyebrow{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 8px}
+.placar{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end}
+.placar .nome{font-size:13px;color:var(--muted)}
+.placar .pct{font-size:40px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.placar .r{text-align:right}
+.placar .vs{color:var(--faint);font-size:13px;padding-bottom:10px}
+.c-f{color:var(--flavio)}.c-l{color:var(--lula)}
+.barra{position:relative;height:16px;border-radius:8px;overflow:hidden;background:var(--lula);margin:12px 0 10px}
+.barra .f{position:absolute;inset:0 auto 0 0;background:var(--flavio);transition:width .4s}
+.barra .meio{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--bg);opacity:.9}
+.status{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;padding:8px 12px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);margin-top:6px}
+.status .dot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
+.status.ok .dot{background:var(--ok)}
+.status.ok{border-color:color-mix(in srgb,var(--ok) 50%,var(--line))}
+.linha-info{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:13px;margin-top:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}.placar .pct{font-size:34px}}
+.mini .pct{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.mini .nome{font-size:12.5px;color:var(--muted)}
+.mini .duo{display:flex;justify-content:space-between;gap:12px;margin-top:4px}
+.aviso{font-size:13px;color:var(--muted);margin-top:8px}
+svg.graf{width:100%;height:auto;display:block;margin-top:8px}
+.legenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);margin-top:6px}
+.legenda i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th{color:var(--faint);font-weight:500;font-size:12px}
+th:first-child,td:first-child{text-align:left}
+td .b{display:inline-block;height:6px;border-radius:3px;background:var(--track);width:72px;vertical-align:middle;margin-left:6px;overflow:hidden}
+td .b i{display:block;height:100%;background:var(--flavio)}
+.tab-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+details{margin-top:8px}
+summary{cursor:pointer;color:var(--muted);font-size:14px}
+.fontes{font-size:12.5px;color:var(--faint);margin-top:26px}
+.fontes a{color:var(--muted)}
+button.tema{font:inherit;font-size:12.5px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;float:right;margin-top:24px}
+[hidden]{display:none!important}
+.esperando{font-size:17px;font-weight:600;margin:4px 0}
+.erro{color:var(--warn);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <button class="tema" id="tema" type="button" aria-label="Alternar tema claro e escuro">tema</button>
+  <h1>Projeção do 2º turno 2026 ao vivo</h1>
+  <p class="sub">A parcial do TSE engana no começo da noite: as cidades pequenas chegam primeiro, as capitais e o Nordeste chegam depois. Esta página corrige isso e projeta o resultado final município a município.</p>
+  <p class="byline">por Victor Faleiros · <a href="https://www.instagram.com/vfaleiros/">@vfaleiros</a> no Instagram</p>
+
+  <div class="card" id="esperando">
+    <p class="eyebrow">Domingo, 25 de outubro</p>
+    <p class="esperando">A apuração começa às 17h (horário de Brasília).</p>
+    <p class="aviso">A página se atualiza sozinha a cada 30 segundos quando as urnas começarem a chegar. Enquanto isso, o ponto de partida é o 1º turno: <span id="esp-1t" class="num"></span>.</p>
+    <p class="erro" id="erro" hidden></p>
+  </div>
+
+  <div id="vivo" hidden>
+    <div class="card">
+      <p class="eyebrow">Projeção do resultado final · <span id="p-apurado" class="num"></span> das urnas apuradas</p>
+      <div class="placar">
+        <div><div class="nome">Flávio Bolsonaro</div><div class="pct c-f num" id="p-a">–</div></div>
+        <div class="vs">×</div>
+        <div class="r"><div class="nome">Lula</div><div class="pct c-l num" id="p-b">–</div></div>
+      </div>
+      <div class="barra" aria-hidden="true"><div class="f" id="p-barra" style="width:50%"></div><div class="meio"></div></div>
+      <div class="status" id="p-status"><span class="dot"></span><span id="p-status-txt">Aguardando urnas</span></div>
+      <div class="linha-info">
+        <span id="p-margem" class="num"></span>
+        <span id="p-hora" class="num"></span>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card mini">
+        <p class="eyebrow">Parcial oficial do TSE agora</p>
+        <div class="duo"><div><div class="nome">Flávio</div><div class="pct c-f num" id="o-a">–</div></div><div style="text-align:right"><div class="nome">Lula</div><div class="pct c-l num" id="o-b">–</div></div></div>
+        <p class="aviso">É o número que a TV mostra. Vai mudando conforme as urnas chegam.</p>
+      </div>
+      <div class="card mini">
+        <p class="eyebrow">Comparecimento</p>
+        <div class="duo"><div><div class="nome">Nas urnas já apuradas</div><div class="pct num" id="c-agora">–</div></div><div style="text-align:right"><div class="nome">Projeção final</div><div class="pct num" id="c-proj">–</div></div></div>
+        <p class="aviso">No 1º turno, 78,9% dos eleitores compareceram.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Parcial do TSE × projeção, ao longo da apuração</p>
+      <svg class="graf" id="graf" viewBox="0 0 720 300" role="img" aria-label="Gráfico da parcial oficial e da projeção de Flávio Bolsonaro conforme a apuração avança"></svg>
+      <div class="legenda"><span><i style="background:var(--flavio)"></i>Projeção (Flávio, % dos válidos)</span><span><i style="background:var(--muted)"></i>Parcial oficial</span><span><i style="background:var(--flavio-soft);height:10px"></i>Faixa de incerteza</span></div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Por estado</p>
+      <div class="tab-wrap"><table id="tab-uf"><thead><tr><th>UF</th><th>Apurado</th><th>Parcial Flávio</th><th>Projeção Flávio</th><th>1º turno</th></tr></thead><tbody></tbody></table></div>
+      <p class="aviso">Percentuais de Flávio Bolsonaro sobre os votos válidos. O que falta para 100% é do Lula.</p>
+    </div>
+  </div>
+
+  <h2>Como a projeção é feita</h2>
+  <p>Cada município tem um gabarito: o resultado dele no 1º turno, dia 4 de outubro. Quando as urnas de um município começam a chegar, a página compara o que chegou com esse gabarito e mede o quanto o voto se deslocou. Para os municípios que ainda não chegaram, aplica o deslocamento medido nos vizinhos e no estado. A soma do que já foi apurado com o que foi projetado é o número no topo.</p>
+  <p>Comparecimento e brancos e nulos entram na conta do mesmo jeito. Para as cidades grandes, cujas seções chegam em ordem parecida nos dois turnos, a página também usa a ordem de chegada do 1º turno para não se enganar com os bairros que votam primeiro.</p>
+  <p>A faixa de incerteza foi calibrada reprisando o 2º turno de 2022 na ordem real em que as urnas entraram. Naquela noite, a parcial oficial só virou para o vencedor com 68% das urnas; a projeção acertou o resultado final com margem de 0,3 ponto a partir de 15% apurado. Enquanto a diferença projetada couber dentro da faixa, a página diz que ainda não dá para cravar.</p>
+  <details><summary>Fontes e limitações</summary>
+    <p class="aviso">Dados oficiais da apuração: arquivos públicos de resultados do TSE, por município, lidos a cada ciclo de 1 a 3 minutos. Gabarito: resultados por seção do 1º turno de 2026, no Portal de Dados Abertos do TSE. Isto não é um resultado oficial nem uma pesquisa: é uma estimativa estatística e pode errar, principalmente nos primeiros minutos e em eleições decididas por menos de 1 ponto. O resultado oficial é só o do TSE.</p>
+  </details>
+
+  <p class="fontes">Projeção feita por Victor Faleiros (<a href="https://www.instagram.com/vfaleiros/">@vfaleiros</a> no Instagram). Veja também o <a href="https://victorfaleiros.github.io/simulador-2-turno/">simulador do 2º turno</a>.</p>
+</div>
+
+<script>
+(function(){
+  var BASE_DADOS='https://retratos-ia.duckdns.org/projecao/';
+  var demo=new URLSearchParams(location.search).get('demo');
+  var URL_DADOS=BASE_DADOS+(demo?'dados-demo.json':'dados.json');
+  var $=function(id){return document.getElementById(id)};
+  var fmt=function(v,c){return v==null?'–':v.toLocaleString('pt-BR',{minimumFractionDigits:c==null?1:c,maximumFractionDigits:c==null?1:c})};
+  var pct=function(v,c){return v==null?'–':fmt(v,c)+'%'};
+
+  // tema
+  var raiz=document.documentElement;try{var t=localStorage.getItem('proj_tema');if(t)raiz.setAttribute('data-theme',t)}catch(e){}
+  $('tema').addEventListener('click',function(){var atual=raiz.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');var novo=atual==='light'?'dark':'light';raiz.setAttribute('data-theme',novo);try{localStorage.setItem('proj_tema',novo)}catch(e){}});
+
+  function grafico(serie){
+    var svg=$('graf');var W=720,H=300,L=44,R=14,T=14,B=34;var w=W-L-R,h=H-T-B;
+    if(!serie||serie.length<2){svg.innerHTML='';return}
+    var vals=[];serie.forEach(function(p){if(p.proj_A!=null){vals.push(p.proj_A+p.faixa/2,p.proj_A-p.faixa/2)}if(p.parcial_A!=null)vals.push(p.parcial_A)});
+    var ymin=Math.floor(Math.min.apply(null,vals)-0.5),ymax=Math.ceil(Math.max.apply(null,vals)+0.5);
+    ymin=Math.max(ymin,30);ymax=Math.min(ymax,70);if(ymax-ymin<4){ymin-=2;ymax+=2}
+    var x=function(a){return L+w*a/100},y=function(v){return T+h*(1-(v-ymin)/(ymax-ymin))};
+    var s='';
+    for(var g=ymin;g<=ymax;g+=(ymax-ymin>12?5:1)){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(g)+'" y2="'+y(g)+'" stroke="var(--line)" stroke-width="1"/><text x="'+(L-6)+'" y="'+(y(g)+4)+'" font-size="11" text-anchor="end" fill="var(--faint)" font-family="var(--mono)">'+g+'</text>'}
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(50)+'" y2="'+y(50)+'" stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1"/>';
+    [0,25,50,75,100].forEach(function(a){s+='<text x="'+x(a)+'" y="'+(H-10)+'" font-size="11" text-anchor="middle" fill="var(--faint)">'+a+'%</text>'});
+    s+='<text x="'+(W-R)+'" y="'+(H-10)+'" font-size="10" text-anchor="end" fill="var(--faint)" dx="0" dy="-14">urnas apuradas</text>';
+    var faixa='',proj='',parc='';
+    var cima=[],baixo=[];
+    serie.forEach(function(p){if(p.proj_A==null)return;cima.push(x(p.apurado)+','+y(p.proj_A+p.faixa/2));baixo.unshift(x(p.apurado)+','+y(p.proj_A-p.faixa/2));proj+=(proj?' L':'M')+x(p.apurado)+' '+y(p.proj_A)});
+    if(cima.length)faixa='<polygon points="'+cima.concat(baixo).join(' ')+'" fill="var(--flavio-soft)"/>';
+    serie.forEach(function(p){if(p.parcial_A==null)return;parc+=(parc?' L':'M')+x(p.apurado)+' '+y(p.parcial_A)});
+    s+=faixa+'<path d="'+parc+'" fill="none" stroke="var(--muted)" stroke-width="2"/><path d="'+proj+'" fill="none" stroke="var(--flavio)" stroke-width="2.5"/>';
+    var u=serie[serie.length-1];
+    if(u.proj_A!=null)s+='<circle cx="'+x(u.apurado)+'" cy="'+y(u.proj_A)+'" r="4" fill="var(--flavio)"/>';
+    svg.innerHTML=s;
+  }
+
+  function render(d){
+    $('erro').hidden=true;
+    if(d.demo){var av=$('erro');av.hidden=false;av.textContent='Modo demonstração: '+d.demo+'.';$('esperando').hidden=false}
+    if(d.final_1t)$('esp-1t').textContent='Flávio '+pct(d.final_1t.A,2)+' × Lula '+pct(d.final_1t.B,2)+' dos votos válidos';
+    var ap=d.apurado_secoes||0;
+    if(ap<=0){$('esperando').hidden=false;$('vivo').hidden=true;return}
+    $('esperando').hidden=true;$('vivo').hidden=false;
+    var p=d.projecao,o=d.parcial;
+    $('p-apurado').textContent=pct(ap,1);
+    $('p-a').textContent=pct(p.A,1);$('p-b').textContent=pct(p.B,1);
+    $('p-barra').style.width=Math.max(2,Math.min(98,p.A))+'%';
+    var lider=p.margem>=0?'Flávio Bolsonaro':'Lula';var dif=Math.abs(p.margem);
+    var st=$('p-status');
+    if(ap<5){st.className='status';$('p-status-txt').textContent='Muito cedo para projetar'}
+    else if(p.cravado){st.className='status ok';$('p-status-txt').textContent='Projeção: '+lider+' vence'}
+    else{st.className='status';$('p-status-txt').textContent='Ainda não dá para cravar'}
+    $('p-margem').textContent=lider+' na frente por '+fmt(dif,1)+' ponto'+(fmt(dif,1)==='1,0'?'':'s')+' · faixa de incerteza de ±'+fmt(p.faixa,1);
+    $('p-hora').textContent='Atualizado às '+(d.hora||'')+(d.hora_tse?' · dados do TSE das '+d.hora_tse:'');
+    $('o-a').textContent=pct(o.A,2);$('o-b').textContent=pct(o.B,2);
+    $('c-agora').textContent=pct(o.comparecimento,1);$('c-proj').textContent=pct(p.comparecimento,1);
+    grafico(d.serie);
+    var tb=$('tab-uf').querySelector('tbody');var rows='';
+    (d.ufs||[]).slice().sort(function(a,b){return b.eleitores-a.eleitores}).forEach(function(u){
+      rows+='<tr><td>'+u.uf+'</td><td>'+pct(u.apurado,0)+'</td><td>'+pct(u.parcial_A,1)+'</td><td><b>'+pct(u.proj_A,1)+'</b><span class="b"><i style="width:'+(u.proj_A||0)+'%"></i></span></td><td>'+pct(u.gabarito_A,1)+'</td></tr>'});
+    tb.innerHTML=rows;
+  }
+
+  function carregar(){
+    fetch(URL_DADOS+'?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(render).catch(function(e){
+      var el=$('erro');el.hidden=false;el.textContent='Não consegui ler os dados agora ('+e.message+'). Tento de novo em 30 segundos.';
+    });
+  }
+  carregar();setInterval(carregar,30000+Math.floor(Math.random()*5000));
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)carregar()});
+})();
+</script>
+<script>
+/* Contador de acessos: registra só a origem do link (via), o site de onde veio e um código aleatório do navegador. Nada pessoal. */
+(function(){try{
+  var q=new URLSearchParams(location.search);var via=(q.get('via')||'').slice(0,40);
+  if(!via&&document.referrer){try{var h=new URL(document.referrer).hostname;if(/instagram|facebook|fb\./.test(h))via='instagram';else if(/whatsapp/.test(h))via='whatsapp';else if(/t\.co|twitter|x\.com/.test(h))via='x';}catch(e){}}
+  var ref='';try{ref=new URL(document.referrer).hostname.slice(0,120)}catch(e){}
+  var ap='';try{ap=localStorage.getItem('sim2t_ap');if(!ap){ap=Math.random().toString(36).slice(2,12)+Date.now().toString(36);localStorage.setItem('sim2t_ap',ap)}}catch(e){}
+  if(sessionStorage.getItem('proj2t_visto'))return;try{sessionStorage.setItem('proj2t_visto','1')}catch(e){}
+  fetch('https://oumcsjqiuitzosrgnhbr.supabase.co/rest/v1/simulador_visitas',{method:'POST',keepalive:true,
+    headers:{'apikey':'sb_publishable_K-AO_54wSlVX5_iBNuaRAQ_JkCpo_zc','Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({pagina:'projecao-2-turno',via:via||null,ref:ref||null,aparelho:ap||null})}).catch(function(){});
+}catch(e){}})();
+</script>
+</body>
+</html>
