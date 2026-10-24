@@ -126,7 +126,8 @@ h1{font-size:22px;font-weight:700;line-height:1.2;margin:5px 0 1px;letter-spacin
 .b4 .hora{margin-top:2px}
 
 /* Resto */
-.resto{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+.resto{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:8px}
+.resto>*{min-width:0}
 .b5 .duo{display:flex;justify-content:space-between;gap:12px;margin-top:2px}
 .b5 .pct{font-size:24px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
 .b5 .nome{font-size:12.5px;color:var(--muted)}
@@ -149,12 +150,20 @@ details .corpo{padding:0 0 14px}
 details .corpo p{max-width:72ch;margin-bottom:8px;font-size:14px;line-height:1.5}
 details .corpo p.aviso{font-size:13px;color:var(--muted)}
 .tab-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+th:first-child,td:first-child{position:sticky;left:0;background:var(--panel);z-index:1}
+.deslize{font-size:12px;color:var(--faint);margin:6px 0 0}
+@media (min-width:768px){.deslize{display:none}}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
-th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th,td{padding:7px 5px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 th{color:var(--faint);font-weight:500;font-size:12px;text-align:right}
 th:first-child,td:first-child{text-align:left}
-td .b{display:inline-block;height:6px;border-radius:3px;background:var(--track);width:60px;vertical-align:middle;margin-left:6px;overflow:hidden}
+td .b{display:inline-block;height:6px;border-radius:3px;background:var(--lula);width:60px;vertical-align:middle;margin-left:6px;overflow:hidden}
 td .b i{display:block;height:100%;background:var(--flavio)}
+thead .grupo th{color:var(--muted);font-weight:600;text-align:center;border-bottom:0;padding-bottom:2px}
+thead .grupo th:first-child{text-align:left}
+thead .sub th{padding-top:0}
+th.sep,td.sep{border-left:1px solid var(--line);padding-left:10px}
+td.c-f,td.c-l{color:var(--fg)}
 .metodo-fontes{display:contents}
 
 /* Rodapé */
@@ -189,7 +198,7 @@ button.tema{font:inherit;font-size:13px;color:var(--muted);background:transparen
   .trio .b1::after,.trio .b2::after{content:"›";position:absolute;right:-11px;top:50%;transform:translateY(-55%);font-size:20px;font-weight:600;color:var(--faint);background:var(--bg);line-height:1;padding:2px 1px;z-index:1}
   .cert-num{font-size:48px}
   .cert-num.texto{font-size:26px}
-  .resto{grid-template-columns:repeat(12,1fr)}
+  .resto{grid-template-columns:repeat(12,minmax(0,1fr))}
   .resto .graf-card{grid-column:1 / 9;grid-row:1}
   .resto .b5{grid-column:9 / 13;grid-row:1}
   .resto .estados{grid-column:1 / 13}
@@ -295,8 +304,9 @@ body.sem-transicao *{transition:none!important}
       <details class="card estados" id="estados">
         <summary>Por estado <small id="estados-sub">27 estados</small></summary>
         <div class="corpo">
-          <div class="tab-wrap"><table id="tab-uf"><thead><tr><th>Estado</th><th>Urnas apuradas</th><th>Agora (TSE)</th><th>Como deve terminar</th><th>1º turno</th></tr></thead><tbody></tbody></table></div>
-          <p class="aviso" style="margin-top:8px">Percentuais de <span class="nome-a">Flávio Bolsonaro</span> sobre os votos válidos. O que falta para 100% é do <span class="nome-b">Lula</span>.</p>
+          <div class="tab-wrap"><table id="tab-uf"><thead><tr class="grupo"><th rowspan="2">Estado</th><th rowspan="2"><span class="pc-i">Urnas apuradas</span><span class="cel">Urnas</span></th><th colspan="2">Agora (TSE)</th><th colspan="2" class="sep">Como deve terminar</th><th colspan="2" class="sep">1º turno</th></tr><tr class="sub"><th class="c-f curto-a">Flávio</th><th class="c-l curto-b">Lula</th><th class="c-f sep curto-a">Flávio</th><th class="c-l curto-b">Lula</th><th class="c-f sep curto-a">Flávio</th><th class="c-l curto-b">Lula</th></tr></thead><tbody></tbody></table></div>
+          <p class="deslize">Deslize a tabela para o lado para ver a projeção e o 1º turno.</p>
+          <p class="aviso" style="margin-top:8px">Percentuais sobre os votos válidos de cada estado. A barra mostra como deve terminar: azul é <span class="nome-a">Flávio Bolsonaro</span>, laranja é <span class="nome-b">Lula</span>.</p>
         </div>
       </details>
 
@@ -348,6 +358,9 @@ body.sem-transicao *{transition:none!important}
     var i,ea=document.querySelectorAll('.nome-a'),eb=document.querySelectorAll('.nome-b');
     for(i=0;i<ea.length;i++)if(ea[i].textContent!==A)ea[i].textContent=A;
     for(i=0;i<eb.length;i++)if(eb[i].textContent!==B)eb[i].textContent=B;
+    var ca=A.split(' ')[0],cb=B.split(' ')[0],ka=document.querySelectorAll('.curto-a'),kb=document.querySelectorAll('.curto-b');
+    for(i=0;i<ka.length;i++)if(ka[i].textContent!==ca)ka[i].textContent=ca;
+    for(i=0;i<kb.length;i++)if(kb[i].textContent!==cb)kb[i].textContent=cb;
     $('graf').setAttribute('aria-label','Gráfico da contagem oficial e da projeção de '+A+' conforme a apuração avança');
   }
 
@@ -432,7 +445,11 @@ body.sem-transicao *{transition:none!important}
     (ufs||[]).slice().sort(function(a,b){return (b.eleitores||0)-(a.eleitores||0)}).forEach(function(u){
       if(u.uf==='ZZ')zz=true;else n++;
       var nome=u.uf==='ZZ'?'Exterior':u.uf;
-      rows+='<tr><td>'+nome+'</td><td>'+pct(u.apurado,0)+'</td><td>'+pct(u.parcial_A,1)+'</td><td><b>'+pct(u.proj_A,1)+'</b><span class="b"><i style="width:'+(u.proj_A||0)+'%"></i></span></td><td>'+pct(u.gabarito_A,1)+'</td></tr>'});
+      var inv=function(v){return v==null||isNaN(v)?null:100-v};
+      rows+='<tr><td>'+nome+'</td><td>'+pct(u.apurado,0)+'</td>'
+        +'<td class="c-f">'+pct(u.parcial_A,1)+'</td><td class="c-l">'+pct(inv(u.parcial_A),1)+'</td>'
+        +'<td class="sep c-f"><b>'+pct(u.proj_A,1)+'</b><span class="b"><i style="width:'+(u.proj_A||0)+'%"></i></span></td><td class="c-l"><b>'+pct(inv(u.proj_A),1)+'</b></td>'
+        +'<td class="sep c-f">'+pct(u.gabarito_A,1)+'</td><td class="c-l">'+pct(inv(u.gabarito_A),1)+'</td></tr>'});
     $('tab-uf').querySelector('tbody').innerHTML=rows;
     setTxt('estados-sub',(n||27)+' estados'+(zz?' e o exterior':''));
   }
