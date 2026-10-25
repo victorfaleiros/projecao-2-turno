@@ -549,7 +549,7 @@ body.sem-transicao *{transition:none!important}
     }else if(cedoDemais){
       chave='cedo0';
       num.className='cert-num num texto';setTxt('b3-num','Ainda não dá para calcular');setTxt('b3-rot','');
-      chip.className='chip warn';setTxt('b3-chip','Muito cedo');
+      chip.className='chip warn';setTxt('b3-chip',ap>=1?'Esperando os dados por município':'Muito cedo');
       setTxt('b3-frase',ap>=1?'O TSE já contou '+pct(ap,1)+' das urnas no total nacional, mas a projeção precisa dos dados por município, que o TSE libera com atraso: só '+pct(apProj,2)+' chegaram. Assim que passarem de 1%, a projeção e a certeza aparecem aqui.':'Chegaram só as primeiras urnas ('+pct(ap,2)+'). É pouco demais para projetar: a contagem de agora mostra só os lugares que terminaram primeiro. A projeção e a certeza aparecem a partir de 1% das urnas.');
       if(a2c==null){apoio.hidden=true;setTxt('b3-apoio','')}
       else setTxt('b3-apoio','Ponto de partida, pelo 1º turno: '+A+' '+pct(a2c,1)+' × '+B+' '+pct(100-a2c,1)+'.');
@@ -596,7 +596,8 @@ body.sem-transicao *{transition:none!important}
       marca.hidden=true;setTxt('b4-etq','Todas as urnas contadas.');$('b4-etq').style.cssText='';
       $('b4-nota').hidden=true;setTxt('b4-hora','Atualizado às '+hora);
     }else{
-      setTxt('b4-pct',(window.innerWidth>=1024?pct(ap,1):inteiro(ap)),true);setTxt('b4-txt','das urnas já contadas');setTxt('b4-elei','('+pct(d.apurado_eleitores,1)+' dos eleitores)');
+      setTxt('b4-pct',(window.innerWidth>=1024?pct(ap,1):inteiro(ap)),true);setTxt('b4-txt','das urnas já contadas');
+      setTxt('b4-elei',(d.apurado_mun!=null&&apProj<ap-0.2&&apProj<5)?'no total nacional · nos dados por município, que a projeção usa: '+pct(apProj,2):'('+pct(d.apurado_eleitores,1)+' dos eleitores)');
       marca.hidden=false;$('b4-nota').hidden=false;
       var px=ponto==null?100:ponto;marca.style.left=px+'%';
       var etq=$('b4-etq');
