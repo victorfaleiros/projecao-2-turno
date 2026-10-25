@@ -312,7 +312,7 @@ body.sem-transicao *{transition:none!important}
 
       <article class="card graf-card" id="grafico">
         <p class="olho"><span>A contagem até agora e onde deve terminar</span></p>
-        <p class="graf-sub">As linhas são a contagem do TSE conforme as urnas chegam. As faixas à direita são onde cada um deve terminar. Quando as duas faixas param de se encostar, quem está em cima vence.</p>
+        <p class="graf-sub" id="graf-sub">As linhas são a contagem do TSE conforme as urnas chegam. As faixas à direita são onde cada um deve terminar. Quando as duas faixas param de se encostar, quem está em cima vence.</p>
         <svg class="graf" id="graf" viewBox="0 0 720 300" role="img" aria-label="Gráfico da contagem oficial e da projeção conforme a apuração avança" hidden></svg>
         <p class="graf-vazio" id="graf-vazio">O gráfico começa a ser desenhado com as primeiras urnas.</p>
         <div class="legenda"><span><i style="background:var(--flavio)"></i><span class="nome-a">Flávio Bolsonaro</span> na contagem</span><span><i style="background:var(--lula)"></i><span class="nome-b">Lula</span> na contagem</span><span><i style="background:var(--flavio);opacity:.28;height:10px"></i><i style="background:var(--lula);opacity:.28;height:10px;margin-left:-4px"></i>Onde cada um deve terminar, com a margem de erro</span></div>
@@ -457,13 +457,15 @@ body.sem-transicao *{transition:none!important}
     svg.innerHTML=s;
   }
 
-  function serieDe(d,ap,esperando){
+  function serieDe(d,ap,esperando,apProj){
     if(esperando)return [];
     var s=(d.serie||[]).filter(function(p){return p&&p.apurado>=1&&p.parcial_A!=null&&p.proj_A!=null}).map(function(p){return{apurado:+p.apurado,parcial_A:+p.parcial_A,proj_A:+p.proj_A,faixa:p.faixa==null?margemDe(+p.apurado):+p.faixa}});
     s.sort(function(a,b){return a.apurado-b.apurado});
     if(ap>=1&&(!s.length||s[s.length-1].apurado<ap-1e-9)){
       s.push({apurado:ap,parcial_A:+d.parcial.A,proj_A:+d.projecao.A,faixa:d.projecao.faixa==null?margemDe(ap):+d.projecao.faixa});
     }
+    /* Antes de MIN_CERTEZA de cobertura municipal a faixa desenhada é propositalmente larga (8 pontos): a projeção ainda é preliminar */
+    if(s.length&&apProj!=null&&apProj<MIN_CERTEZA)s[s.length-1].faixa=Math.max(s[s.length-1].faixa,8);
     return s;
   }
 
@@ -660,7 +662,8 @@ var REGIOES={"1":{"nome":"Norte","d":"M117.9,193.6 121.0,194.1 124.0,197.9 129.8
     /* Bloco 5, gráfico, tabela */
     setTxt('b5-ag',esperando?'–':pct(comp.ag,1));setTxt('b5-pr',esperando?'–':pct(comp.pr,1));
     setTxt('b5-hora',esperando?'A próxima leitura é às 17h.':'Atualizado às '+hora+' · próxima leitura em 30 s');
-    grafico(serieDe(d,ap,esperando||cedoDemais));
+    grafico(serieDe(d,ap,esperando||cedoDemais,apProj));
+    setTxt('graf-sub',apProj<MIN_CERTEZA?'As linhas são a contagem do TSE conforme as urnas chegam. As faixas à direita são onde cada um pode terminar. Antes de '+MIN_CERTEZA+'% das urnas por município a faixa é preliminar e propositalmente larga; quando as duas faixas pararem de se encostar, quem está em cima vence.':'As linhas são a contagem do TSE conforme as urnas chegam. As faixas à direita são onde cada um deve terminar. Quando as duas faixas param de se encostar, quem está em cima vence.');
     tabela(d.ufs,cedoDemais);
     mapa(d.ufs,esperando);
 
