@@ -432,15 +432,15 @@ body.sem-transicao *{transition:none!important}
 
   function serieDe(d,ap,esperando){
     if(esperando)return [];
-    var s=(d.serie||[]).filter(function(p){return p&&p.apurado>0&&p.parcial_A!=null&&p.proj_A!=null}).map(function(p){return{apurado:+p.apurado,parcial_A:+p.parcial_A,proj_A:+p.proj_A,faixa:p.faixa==null?margemDe(+p.apurado):+p.faixa}});
+    var s=(d.serie||[]).filter(function(p){return p&&p.apurado>=1&&p.parcial_A!=null&&p.proj_A!=null}).map(function(p){return{apurado:+p.apurado,parcial_A:+p.parcial_A,proj_A:+p.proj_A,faixa:p.faixa==null?margemDe(+p.apurado):+p.faixa}});
     s.sort(function(a,b){return a.apurado-b.apurado});
-    if(!s.length||s[s.length-1].apurado<ap-1e-9){
+    if(ap>=1&&(!s.length||s[s.length-1].apurado<ap-1e-9)){
       s.push({apurado:ap,parcial_A:+d.parcial.A,proj_A:+d.projecao.A,faixa:d.projecao.faixa==null?margemDe(ap):+d.projecao.faixa});
     }
     return s;
   }
 
-  function tabela(ufs){
+  function tabela(ufs,semProj){
     var rows='',n=0,zz=false;
     (ufs||[]).slice().sort(function(a,b){return (b.eleitores||0)-(a.eleitores||0)}).forEach(function(u){
       if(u.uf==='ZZ')zz=true;else n++;
@@ -448,7 +448,7 @@ body.sem-transicao *{transition:none!important}
       var inv=function(v){return v==null||isNaN(v)?null:100-v};
       rows+='<tr><td>'+nome+'</td><td>'+pct(u.apurado,0)+'</td>'
         +'<td class="c-f">'+pct(u.parcial_A,1)+'</td><td class="c-l">'+pct(inv(u.parcial_A),1)+'</td>'
-        +'<td class="sep c-f"><b>'+pct(u.proj_A,1)+'</b><span class="b"><i style="width:'+(u.proj_A||0)+'%"></i></span></td><td class="c-l"><b>'+pct(inv(u.proj_A),1)+'</b></td>'
+        +(semProj?'<td class="sep c-f">–</td><td class="c-l">–</td>':'<td class="sep c-f"><b>'+pct(u.proj_A,1)+'</b><span class="b"><i style="width:'+(u.proj_A||0)+'%"></i></span></td><td class="c-l"><b>'+pct(inv(u.proj_A),1)+'</b></td>')
         +'<td class="sep c-f">'+pct(u.gabarito_A,1)+'</td><td class="c-l">'+pct(inv(u.gabarito_A),1)+'</td></tr>'});
     $('tab-uf').querySelector('tbody').innerHTML=rows;
     setTxt('estados-sub',(n||27)+' estados'+(zz?' e o exterior':''));
@@ -462,8 +462,10 @@ body.sem-transicao *{transition:none!important}
     var ap=Number(d.apurado_secoes)||0;
     var parc=d.parcial||{}, proj=d.projecao||{}, comp={ag:parc.comparecimento,pr:proj.comparecimento};
     var esperando=ap<=0||parc.A==null||proj.A==null;
+    var cedoDemais=!esperando&&ap<1; /* abaixo de 1% das urnas a projeção não é confiável: mostra o ponto de partida do 1º turno */
+    var a2c=d.final_1t&&d.final_1t.A_2c!=null?Number(d.final_1t.A_2c):null;
     var finalizado=!esperando&&ap>=99.95;
-    var horaTse=d.hora_tse||d.hora||'', hora=d.hora||d.hora_tse||'';
+    var horaTse=d.hora||d.hora_tse||'', hora=d.hora||d.hora_tse||'';
     var t=quando(d.atualizado)||opts.lidoEm||0;
     var paradoHa=t?Date.now()-t:0;
     /* Antes da contagem o dado velho é normal; depois das 17:05 de domingo, dado velho é robô parado */
@@ -476,7 +478,7 @@ body.sem-transicao *{transition:none!important}
     else if(esperando&&!opts.falha&&!parado) faixaStatus('espera','<b>Antes da contagem</b> · começa às 17h<span class="pc-i">, horário de Brasília</span>');
     else if(finalizado) faixaStatus('final','<b>Apuração encerrada</b> · resultado <span class="pc-i">oficial </span>do TSE das '+horaTse);
     else if(opts.falha||parado) faixaStatus('parado','<b>Parado há '+haQuanto(paradoHa)+'</b> · <span class="pc-i">últimos </span>dados do TSE das '+horaTse+'<span class="pc-i"> · tentando de novo</span>');
-    else faixaStatus('vivo','<b>Ao vivo</b> · dados do TSE das '+horaTse);
+    else faixaStatus('vivo','<b>Ao vivo</b> · TSE lido às '+horaTse);
 
     /* Bloco 1 */
     if(esperando){
@@ -488,7 +490,7 @@ body.sem-transicao *{transition:none!important}
       setTxt('b1-linha',finalizado?'100% das urnas · número final':inteiro(ap)+' das urnas · ainda vai mudar',true);
       setTxt('b1-votos',milhoes(parc.votos_A)+' × '+milhoes(parc.votos_B)+' de votos');
       var liderParc=parc.A>=parc.B?A:B, liderProj=proj.A>=proj.B?A:B;
-      var diverge=!finalizado&&liderParc!==liderProj;
+      var diverge=!finalizado&&!cedoDemais&&liderParc!==liderProj;
       $('b1-nota').hidden=!diverge;
       if(diverge)setTxt('b1-nota','Na contagem de agora, '+liderParc+' está na frente. Mas as urnas que faltam são de lugares onde '+liderProj+' vai melhor, por isso a projeção aponta o contrário.');
     }
@@ -500,6 +502,11 @@ body.sem-transicao *{transition:none!important}
       setTxt('b2-olho','Como deve terminar');setTxt('b2-sub','projeção');
       setTxt('b2-a','–');setTxt('b2-b','–');$('b2-f').style.width='50%';$('b2-barra').classList.add('vazia');
       setTxt('b2-linha','A projeção aparece com as primeiras urnas.');setTxt('b2-comp','');
+    }else if(cedoDemais){
+      setTxt('b2-olho','Ponto de partida');setTxt('b2-sub','pelo 1º turno, em dois candidatos');
+      if(a2c==null){setTxt('b2-a','–');setTxt('b2-b','–');$('b2-f').style.width='50%';$('b2-barra').classList.add('vazia')}
+      else{$('b2-barra').classList.remove('vazia');setTxt('b2-a',pct(a2c,1),true);setTxt('b2-b',pct(100-a2c,1),true);$('b2-f').style.width=Math.max(2,Math.min(98,a2c))+'%'}
+      setTxt('b2-linha','A projeção aparece a partir de 1% das urnas.');setTxt('b2-comp','');
     }else{
       $('b2-barra').classList.remove('vazia');
       if(finalizado){setTxt('b2-olho','Resultado final');setTxt('b2-sub','projeção e oficial agora são o mesmo número')}
@@ -520,7 +527,6 @@ body.sem-transicao *{transition:none!important}
       num.className='cert-num num texto';setTxt('b3-num','Aguardando as urnas');setTxt('b3-rot','');
       chip.className='chip';setTxt('b3-chip','Começa às 17h');
       setTxt('b3-frase','A contagem começa às 17h, horário de Brasília. Assim que as primeiras urnas chegarem, esta frase vai dizer quem deve vencer e com quanta certeza.');
-      var a2c=d.final_1t&&d.final_1t.A_2c!=null?Number(d.final_1t.A_2c):null;
       if(a2c==null){apoio.hidden=true;setTxt('b3-apoio','')}
       else setTxt('b3-apoio','Ponto de partida, pelo 1º turno: '+A+' '+pct(a2c,1)+' × '+B+' '+pct(100-a2c,1)+'.');
     }else if(finalizado){
@@ -529,11 +535,18 @@ body.sem-transicao *{transition:none!important}
       chip.className='chip ok';setTxt('b3-chip','Resultado final');
       setTxt('b3-frase','Apuração encerrada: '+lider+' venceu, com '+pct(pA,1)+' dos votos válidos contra '+pct(pB,1)+' de '+atras+'. Esse é o número oficial do TSE.');
       apoio.hidden=true;rod.innerHTML='<a href="#fontes">Resultado oficial do TSE. A apuração terminou.</a>';
+    }else if(cedoDemais){
+      chave='cedo0';
+      num.className='cert-num num texto';setTxt('b3-num','Ainda não dá para calcular');setTxt('b3-rot','');
+      chip.className='chip warn';setTxt('b3-chip','Muito cedo');
+      setTxt('b3-frase','Chegaram só as primeiras urnas ('+pct(ap,2)+'). É pouco demais para projetar: a contagem de agora mostra só os lugares que terminaram primeiro. A projeção e a certeza aparecem a partir de 1% das urnas.');
+      if(a2c==null){apoio.hidden=true;setTxt('b3-apoio','')}
+      else setTxt('b3-apoio','Ponto de partida, pelo 1º turno: '+A+' '+pct(a2c,1)+' × '+B+' '+pct(100-a2c,1)+'.');
     }else if(ap<5){
       chave='cedo';
-      setHtml('b3-num',c.mais?'<small>mais de</small>99%':c.txt);setTxt('b3-rot','de certeza, por enquanto');
-      chip.className='chip warn';setTxt('b3-chip','Muito cedo');
-      setTxt('b3-frase','Ainda é muito cedo: só '+pct(ap,1)+' das urnas chegaram. Por enquanto, a projeção aponta '+lider+' na frente, '+pct(pA,1)+' a '+pct(pB,1)+', mas esse número ainda pode virar.');
+      num.className='cert-num num texto';setTxt('b3-num','Muito cedo');setTxt('b3-rot','');
+      chip.className='chip warn';setTxt('b3-chip','Projeção preliminar');
+      setTxt('b3-frase','Só '+pct(ap,1)+' das urnas chegaram. Por enquanto, a projeção aponta '+lider+' na frente, '+pct(pA,1)+' a '+pct(pB,1)+', mas esse número ainda pode virar. A certeza passa a ser calculada com 5% das urnas.');
       setTxt('b3-apoio','Margem de erro agora: ±'+pontos(m)+'. Ela encolhe conforme as urnas chegam.');
     }else if(dif<0.05){
       chave='empate';
@@ -587,7 +600,7 @@ body.sem-transicao *{transition:none!important}
     setTxt('b5-ag',esperando?'–':pct(comp.ag,1));setTxt('b5-pr',esperando?'–':pct(comp.pr,1));
     setTxt('b5-hora',esperando?'A próxima leitura é às 17h.':'Atualizado às '+hora+' · próxima leitura em 30 s');
     grafico(serieDe(d,ap,esperando));
-    tabela(d.ufs);
+    tabela(d.ufs,cedoDemais);
 
     if(!opts.vazio)primeira=false;
   }
