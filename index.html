@@ -64,6 +64,8 @@ h1{font-size:22px;font-weight:700;line-height:1.2;margin:5px 0 1px;letter-spacin
 .byline{font-size:13px;color:var(--muted);margin-top:0}
 .byline a{color:var(--flavio);font-weight:600;text-decoration:none}
 .topo{margin-bottom:8px}
+.aviso-topo{margin:0 0 10px;padding:10px 14px;border-radius:12px;background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 55%,transparent);color:var(--fg);font-size:14px;line-height:1.45;text-wrap:pretty}
+.aviso-topo b{color:var(--warn)}
 
 /* Cards */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px 11px}
@@ -242,6 +244,8 @@ body.sem-transicao *{transition:none!important}
     <p class="sub">A parcial da TV engana no começo da noite. Aqui você vê como deve terminar.</p>
   </header>
 
+  <div class="aviso-topo" role="alert"><b>Aviso importante.</b> Os dados do TSE chegaram de forma irregular hoje: a divulgação ficou pausada até as 19h e os arquivos por município, que a projeção usa, vieram atrasados em relação ao total nacional. Isso atrapalhou as projeções do começo da noite. Por segurança, o percentual de certeza só será mostrado a partir de <b>40% das urnas apuradas</b>. Até lá, trate a projeção como preliminar.</div>
+
   <main>
     <section class="trio">
       <article class="card b1">
@@ -389,7 +393,7 @@ body.sem-transicao *{transition:none!important}
   /* Regras do dossiê (iguais às do robô: degrau por "menor que") */
   var DEG=[[2,8],[5,5],[10,3],[20,1.5],[40,1.2],[60,0.9],[80,0.6],[95,0.4],[99,0.2],[100.01,0.1]];
   function margemDe(ap){for(var i=0;i<DEG.length;i++){if(ap<DEG[i][0])return DEG[i][1]}return 0.1}
-  var MIN_CERTEZA=10, MIN_CRAVAR=20; /* cobertura municipal mínima para mostrar o % de certeza e para cravar: decisão do Victor na noite da apuração, uma eleição de calibração (2022) é pouco para cravar cedo */
+  var MIN_CERTEZA=40, MIN_CRAVAR=40; /* cobertura municipal mínima para mostrar o % de certeza e para cravar: decisão do Victor na noite da apuração, uma eleição de calibração (2022) é pouco para cravar cedo */
   function pontoCravar(dif){if(dif<=0.1)return null;var ini=0;for(var i=0;i<DEG.length;i++){if(DEG[i][1]<dif)return Math.max(MIN_CRAVAR,ini);ini=DEG[i][0]}return null}
   function phi(z){var t=1/(1+0.2316419*Math.abs(z));var d=0.3989423*Math.exp(-z*z/2);var p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p}
   function certeza(dif,m){var p=phi(dif/(m/2));if(p>0.99)return{txt:'mais de 99%',mais:true,v:99.5,p:p};var c=Math.max(50,Math.round(p*100));return{txt:c+'%',mais:false,v:c,p:p}}
