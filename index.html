@@ -472,8 +472,12 @@ body.sem-transicao *{transition:none!important}
     function minutos(h){var m=/^(\d{1,2}):(\d{2})/.exec(h||'');return m?(+m[1])*60+(+m[2]):null}
     var mTse=minutos(d.hora_tse), mRobo=minutos(d.hora);
     var atrasoTse=(mTse!=null&&mRobo!=null)?((mRobo-mTse+1440)%1440):0;
+
     var t=quando(d.atualizado)||opts.lidoEm||0;
     var paradoHa=t?Date.now()-t:0;
+    /* Pausa do TSE: o dado não muda há 15 min embora o robô continue lendo (o carimbo de hora do TSE não serve: ele atrasa mesmo com divulgação ao vivo) */
+    var tMud=quando(d.ultima_mudanca), semMudanca=tMud&&t?(t-tMud):0;
+    var tsePausado=!finalizado&&tMud?semMudanca>15*60000:atrasoTse>=15&&!d.ultima_mudanca;
     /* Antes da contagem o dado velho é normal; depois das 17:05 de domingo, dado velho é robô parado */
     var depoisDoInicio=Date.now()>Date.parse('2026-10-25T17:05:00-03:00');
     var parado=!finalizado&&t&&paradoHa>5*60000&&(!esperando||depoisDoInicio);
@@ -484,8 +488,8 @@ body.sem-transicao *{transition:none!important}
     else if(esperando&&!opts.falha&&!parado) faixaStatus('espera','<b>Antes da contagem</b> · começa às 17h<span class="pc-i">, horário de Brasília</span>');
     else if(finalizado) faixaStatus('final','<b>Apuração encerrada</b> · resultado <span class="pc-i">oficial </span>do TSE das '+horaTse);
     else if(opts.falha||parado) faixaStatus('parado','<b>Parado há '+haQuanto(paradoHa)+'</b> · <span class="pc-i">últimos </span>dados do TSE das '+horaTse+'<span class="pc-i"> · tentando de novo</span>');
-    else if(atrasoTse>=15) faixaStatus('espera','<b>TSE pausou a divulgação</b> · último dado das '+d.hora_tse+' · a página retoma sozinha');
-    else faixaStatus('vivo','<b>Ao vivo</b> · TSE das '+(d.hora_tse||horaTse)+' · lido às '+hora);
+    else if(tsePausado) faixaStatus('espera','<b>TSE pausou a divulgação</b> · sem dado novo há '+haQuanto(semMudanca||atrasoTse*60000)+' · a página retoma sozinha');
+    else faixaStatus('vivo','<b>Ao vivo</b> · lido do TSE às '+hora);
 
     /* Bloco 1 */
     if(esperando){
