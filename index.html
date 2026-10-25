@@ -462,7 +462,9 @@ body.sem-transicao *{transition:none!important}
     var ap=Number(d.apurado_secoes)||0;
     var parc=d.parcial||{}, proj=d.projecao||{}, comp={ag:parc.comparecimento,pr:proj.comparecimento};
     var esperando=ap<=0||parc.A==null||proj.A==null;
-    var cedoDemais=!esperando&&ap<1; /* abaixo de 1% das urnas a projeção não é confiável: mostra o ponto de partida do 1º turno */
+    /* apProj = cobertura dos arquivos por município, que é o que a projeção usa; o TSE libera esses arquivos com atraso em relação ao total nacional */
+    var apProj=d.apurado_mun!=null?(Number(d.apurado_mun)||0):ap;
+    var cedoDemais=!esperando&&apProj<1; /* abaixo de 1% de cobertura municipal a projeção não é confiável: mostra o ponto de partida do 1º turno */
     var a2c=d.final_1t&&d.final_1t.A_2c!=null?Number(d.final_1t.A_2c):null;
     var finalizado=!esperando&&ap>=99.95;
     var horaTse=d.hora||d.hora_tse||'', hora=d.hora||d.hora_tse||'';
@@ -506,19 +508,19 @@ body.sem-transicao *{transition:none!important}
       setTxt('b2-olho','Ponto de partida');setTxt('b2-sub','pelo 1º turno, em dois candidatos');
       if(a2c==null){setTxt('b2-a','–');setTxt('b2-b','–');$('b2-f').style.width='50%';$('b2-barra').classList.add('vazia')}
       else{$('b2-barra').classList.remove('vazia');setTxt('b2-a',pct(a2c,1),true);setTxt('b2-b',pct(100-a2c,1),true);$('b2-f').style.width=Math.max(2,Math.min(98,a2c))+'%'}
-      setTxt('b2-linha','A projeção aparece a partir de 1% das urnas.');setTxt('b2-comp','');
+      setTxt('b2-linha',ap>=1?'A projeção depende dos dados por município, que o TSE libera com atraso. Por enquanto só '+pct(apProj,2)+' deles chegaram.':'A projeção aparece a partir de 1% das urnas.');setTxt('b2-comp','');
     }else{
       $('b2-barra').classList.remove('vazia');
       if(finalizado){setTxt('b2-olho','Resultado final');setTxt('b2-sub','projeção e oficial agora são o mesmo número')}
-      else{setTxt('b2-olho','Como deve terminar');setTxt('b2-sub','projeção com '+inteiro(ap)+' das urnas')}
+      else{setTxt('b2-olho','Como deve terminar');setTxt('b2-sub','projeção com '+inteiro(apProj)+' das urnas')}
       setTxt('b2-a',pct(proj.A,1),true);setTxt('b2-b',pct(proj.B,1),true);$('b2-f').style.width=Math.max(2,Math.min(98,proj.A))+'%';
       setTxt('b2-linha',dif<0.05?'Empate na projeção':lider+(finalizado?' venceu por ':' na frente por ')+pontos(dif),true);
       setTxt('b2-comp','Comparecimento projetado: '+pct(comp.pr,1));
     }
 
     /* Bloco 3: regras numéricas da página */
-    var m=margemDe(ap), c=esperando?null:certeza(dif,m), ponto=esperando?null:pontoCravar(dif);
-    var cravado=!esperando&&dif>m&&ap>=5;
+    var m=margemDe(apProj), c=esperando?null:certeza(dif,m), ponto=esperando?null:pontoCravar(dif);
+    var cravado=!esperando&&dif>m&&apProj>=5;
     var chip=$('b3-chip'), rod=$('b3-rodape'), apoio=$('b3-apoio'), num=$('b3-num');
     num.className='cert-num num';rod.className='rodape-b3';rod.innerHTML='<a href="#metodo">Projeção, não resultado oficial. O TSE segue contando.</a>';apoio.hidden=false;apoio.classList.remove('pc');
     var chave;
@@ -539,14 +541,14 @@ body.sem-transicao *{transition:none!important}
       chave='cedo0';
       num.className='cert-num num texto';setTxt('b3-num','Ainda não dá para calcular');setTxt('b3-rot','');
       chip.className='chip warn';setTxt('b3-chip','Muito cedo');
-      setTxt('b3-frase','Chegaram só as primeiras urnas ('+pct(ap,2)+'). É pouco demais para projetar: a contagem de agora mostra só os lugares que terminaram primeiro. A projeção e a certeza aparecem a partir de 1% das urnas.');
+      setTxt('b3-frase',ap>=1?'O TSE já contou '+pct(ap,1)+' das urnas no total nacional, mas a projeção precisa dos dados por município, que o TSE libera com atraso: só '+pct(apProj,2)+' chegaram. Assim que passarem de 1%, a projeção e a certeza aparecem aqui.':'Chegaram só as primeiras urnas ('+pct(ap,2)+'). É pouco demais para projetar: a contagem de agora mostra só os lugares que terminaram primeiro. A projeção e a certeza aparecem a partir de 1% das urnas.');
       if(a2c==null){apoio.hidden=true;setTxt('b3-apoio','')}
       else setTxt('b3-apoio','Ponto de partida, pelo 1º turno: '+A+' '+pct(a2c,1)+' × '+B+' '+pct(100-a2c,1)+'.');
-    }else if(ap<5){
+    }else if(apProj<5){
       chave='cedo';
       num.className='cert-num num texto';setTxt('b3-num','Muito cedo');setTxt('b3-rot','');
       chip.className='chip warn';setTxt('b3-chip','Projeção preliminar');
-      setTxt('b3-frase','Só '+pct(ap,1)+' das urnas chegaram. Por enquanto, a projeção aponta '+lider+' na frente, '+pct(pA,1)+' a '+pct(pB,1)+', mas esse número ainda pode virar. A certeza passa a ser calculada com 5% das urnas.');
+      setTxt('b3-frase','Só '+pct(apProj,1)+' das urnas chegaram por município. Por enquanto, a projeção aponta '+lider+' na frente, '+pct(pA,1)+' a '+pct(pB,1)+', mas esse número ainda pode virar. A certeza passa a ser calculada com 5% das urnas.');
       setTxt('b3-apoio','Margem de erro agora: ±'+pontos(m)+'. Ela encolhe conforme as urnas chegam.');
     }else if(dif<0.05){
       chave='empate';
@@ -590,7 +592,7 @@ body.sem-transicao *{transition:none!important}
       var px=ponto==null?100:ponto;marca.style.left=px+'%';
       var etq=$('b4-etq');
       if(ponto==null)etq.textContent='Só com 100% das urnas';
-      else if(ap>=ponto)etq.textContent=ponto+'%: a partir daqui já dava para cravar';
+      else if(apProj>=ponto)etq.textContent=ponto+'%: a partir daqui já dava para cravar';
       else etq.textContent=ponto+'%: a partir daqui dá para cravar, se a diferença se mantiver';
       if(px<50)etq.style.cssText='margin-left:'+px+'%;text-align:left';else etq.style.cssText='margin-right:'+(100-px)+'%;text-align:right';
       setTxt('b4-hora','Atualizado às '+hora);
@@ -599,7 +601,7 @@ body.sem-transicao *{transition:none!important}
     /* Bloco 5, gráfico, tabela */
     setTxt('b5-ag',esperando?'–':pct(comp.ag,1));setTxt('b5-pr',esperando?'–':pct(comp.pr,1));
     setTxt('b5-hora',esperando?'A próxima leitura é às 17h.':'Atualizado às '+hora+' · próxima leitura em 30 s');
-    grafico(serieDe(d,ap,esperando));
+    grafico(serieDe(d,ap,esperando||cedoDemais));
     tabela(d.ufs,cedoDemais);
 
     if(!opts.vazio)primeira=false;
